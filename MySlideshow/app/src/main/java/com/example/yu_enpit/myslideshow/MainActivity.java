@@ -1,5 +1,6 @@
 package com.example.yu_enpit.myslideshow;
 
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -7,6 +8,10 @@ import android.view.animation.BounceInterpolator;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.ViewSwitcher;
+
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.logging.Handler;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,6 +24,27 @@ public class MainActivity extends AppCompatActivity {
             ,R.drawable.slide08,R.drawable.slide09
     };
     int mPosition = 0;
+
+    boolean mIsSlideshow = false;
+    MediaPlayer mMediaPlayer;
+
+    public class MainTimerTask extends TimerTask{
+        @Override
+        public void run(){
+            if(mIsSlideshow){
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        movePosition(1);
+                    }
+                });
+            }
+        }
+    }
+
+    Timer mTimer = new Timer();
+    TimerTask mTimerTask = new MainTimerTask();
+    Handler mHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +59,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         mImageSwitcher.setImageResource(mImageResources[0]);
+        mTimer.schedule(mTimerTask,0,5000);
+        mMediaPlayer = MediaPlayer.create(this,R.raw.getdown);
+        mMediaPlayer.setLooping(true);
     }
     public void onAnimationButtonTapped(View view){
         float y = view.getY() + 100;
@@ -48,10 +77,26 @@ public class MainActivity extends AppCompatActivity {
         mImageSwitcher.setImageResource(mImageResources[mPosition]);
     }
     public void onPrevButtonTapped(View view){
+        mImageSwitcher.setInAnimation(this,android.R.anim.fade_in);
+        mImageSwitcher.setOutAnimation(this,android.R.anim.fade_out);
         movePosition(-1);
+        findViewById(R.id.imageView).animate().setDuration(1000).alpha(0.0f);
     }
     public void onNextButtonTapped(View view){
+        mImageSwitcher.setInAnimation(this,android.R.anim.slide_in_left);
+        mImageSwitcher.setOutAnimation(this,android.R.anim.slide_out_right);
         movePosition(1);
+        findViewById(R.id.imageView).animate().setDuration(1000).alpha(0.0f);
+    }
+    public void onSlideshowButtonTapped(View view){
+        mIsSlideshow = !mIsSlideshow;
+
+        if(mIsSlideshow){
+            mMediaPlayer.start();
+        }else{
+            mMediaPlayer.pause();
+            mMediaPlayer.seekTo(0);
+        }
     }
 
 }
